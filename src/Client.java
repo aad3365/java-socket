@@ -3,28 +3,28 @@ import java.net.*;
 import java.util.Scanner;
  
 public class Client {
-    private Socket socket = null;
- 
     public Client(String address, int port)
     {
-        try {
-            socket = new Socket(address, port);
-            System.out.println("연결 성공");
-        }
-        catch (UnknownHostException u) {
-            System.out.println(u);
-            return;
-        }
-        catch (IOException i) {
-            System.out.println(i);
-            return;
-        }
- 
-        try {
-            socket.close();
-        }
-        catch (IOException i) {
-            System.out.println(i);
+        try (Socket socket = new Socket(address, port);
+             BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+             PrintWriter writer = new PrintWriter(socket.getOutputStream(), true)) {
+
+            System.out.println("Connected to the server.");
+
+            // Read user input from the console
+            System.out.print("Client: ");
+
+            String userInput = "hello socket";
+            System.out.println(userInput);
+
+            // Send the user input to the server
+            writer.println(userInput);
+    
+            // Receive and print the server's response
+            String serverResponse = reader.readLine();
+            System.out.println("Server: " + serverResponse);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
  

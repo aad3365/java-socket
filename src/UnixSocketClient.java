@@ -1,32 +1,29 @@
 import java.io.*;
 import java.net.*;
+import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
 
 public class UnixSocketClient {
     public static void main(String[] args) {
-        try (Socket socket = new Socket()) {
+        String socketPath = "/tmp/unix_socket.sock";
+
+        try (SocketChannel channel = SocketChannel.open(StandardProtocolFamily.UNIX)) {
             // Connect to the Unix socket server
-            socket.connect(UnixDomainSocketAddress.of("unix_socket_server.sock"));
+            channel.connect(UnixDomainSocketAddress.of(socketPath));
+            System.out.println("socket connected");
 
-            BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
-            BufferedReader consoleReader = new BufferedReader(new InputStreamReader(System.in));
+            String message = "hello unix socket world";
+            ByteBuffer buffer = ByteBuffer.allocate(1024);
 
-            System.out.println("Connected to the server.");
+            buffer.clear();
+            buffer.put(message.getBytes());
+            buffer.flip();
 
-            while (true) {
-                // Read user input from the console
-                System.out.print("Client: ");
-                String userInput = consoleReader.readLine();
-
-                // Send the user input to the server
-                writer.println(userInput);
-
-                // Receive and print the server's response
-                String serverResponse = reader.readLine();
-                System.out.println(serverResponse);
+            while (buffer.hasRemaining()) {
+                channel.write(buffer);
             }
         } catch (IOException e) {
             e.printStackTrace();
-        }
+        }        
     }
 }
